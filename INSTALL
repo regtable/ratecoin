@@ -1,0 +1,9 @@
+Building RATECoin
+
+See doc/readme-qt.rst for instructions on building RATECoin QT,
+the intended-for-end-users, nice-graphical-interface, reference
+implementation of RATECoin.
+
+See doc/build-*.txt for instructions on building RATECoind,
+the intended-for-services, no-graphical-interface, reference
+implementation of RATECoin.
