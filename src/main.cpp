@@ -41,6 +41,7 @@ CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
 CBigNum bnProofOfWorkLimitTestNet(~uint256(0) >> 16);
 
 unsigned int nTargetSpacing = 1 * 30; // 30 seconds
+unsigned int nTargetSpacing2 = 3 * 60; // New block every 3 minutes
 unsigned int nStakeMinAge = 4 * 60 * 60; // 4 hours
 unsigned int nStakeMaxAge = 30 * 24 * 60 * 60;           // 30 days
 unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
@@ -1059,7 +1060,11 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 
 static unsigned int GetNextTargetRequired_(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    CBigNum bnTargetLimit = fProofOfStake ? bnProofOfStakeLimit : bnProofOfWorkLimit;
+   unsigned int nTargetTemp = nTargetSpacing;
+	if(pindexLast->nTime > FORK_TIME)
+		nTargetTemp = nTargetSpacing2; //fork target to 3 minute blocks
+	
+	CBigNum bnTargetLimit = fProofOfStake ? bnProofOfStakeLimit : bnProofOfWorkLimit;
 
     if (pindexLast == NULL)
         return bnTargetLimit.GetCompact(); // genesis block
@@ -1073,15 +1078,15 @@ static unsigned int GetNextTargetRequired_(const CBlockIndex* pindexLast, bool f
 
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
     if (nActualSpacing < 0)
-        nActualSpacing = nTargetSpacing;
+        nActualSpacing = nTargetTemp;
 
     // ppcoin: target change every block
     // ppcoin: retarget with exponential moving toward target spacing
     CBigNum bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
-    int64_t nInterval = nTargetTimespan / nTargetSpacing;
-    bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
-    bnNew /= ((nInterval + 1) * nTargetSpacing);
+    int64_t nInterval = nTargetTimespan / nTargetTemp;
+    bnNew *= ((nInterval - 1) * nTargetTemp + nActualSpacing + nActualSpacing);
+    bnNew /= ((nInterval + 1) * nTargetTemp);
 
     if (bnNew <= 0 || bnNew > bnTargetLimit)
         bnNew = bnTargetLimit;
