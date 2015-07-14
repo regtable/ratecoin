@@ -40,6 +40,7 @@ static const int64_t MAX_MONEY = 500000000 * COIN;
 static const int64_t COIN_YEAR_REWARD = 30 * CENT;
 static const int64_t MAX_MINT_PROOF_OF_STAKE = 0.30 * COIN;
 static const int MODIFIER_INTERVAL_SWITCH = 1000;
+static const unsigned int FORK_TIME = 1437613200; // Thu, 23 Jul 2015 01:00:00 GMT
 
 inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 // Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp.
@@ -53,9 +54,20 @@ static const int fHaveUPnP = false;
 
 static const uint256 hashGenesisBlock("0x0000093f866ed96661b2b4893f1c9e4f163698acbebfb8754da507c7f07090e9");
 static const uint256 hashGenesisBlockTestNet("0x0000093f866ed96661b2b4893f1c9e4f163698acbebfb8754da507c7f07090e9");
-inline int64_t PastDrift(int64_t nTime)   { return nTime - 10 * 60; } // up to 10 minutes from the past
-inline int64_t FutureDrift(int64_t nTime) { return nTime + 10 * 60; } // up to 10 minutes from the future
-
+inline int64_t PastDrift(int64_t nTime)   
+{ 
+	if(nTime < FORK_TIME)
+		return nTime - 10 * 60; 
+	else
+		return nTime - 90;
+}
+inline int64_t FutureDrift(int64_t nTime) 
+{ 
+	if(nTime < FORK_TIME)
+		return nTime + 10 * 60;
+	else
+		return nTime + 90;
+}
 
 extern libzerocoin::Params* ZCParams;
 extern CScript COINBASE_FLAGS;
