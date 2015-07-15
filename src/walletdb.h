@@ -23,6 +23,23 @@ enum DBErrors
     DB_NEED_REWRITE
 };
 
+class CLockedCoins
+{
+public:
+	//locked coins use its own datatype to make read and write serialization handling a bit easier. Also in case we want to add more params in future
+	std::vector<COutPoint> vLockedCoins; //coins that are 'locked' to prevent staking
+	
+	CLockedCoins()
+	{
+		vLockedCoins.clear();
+	}
+	
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(vLockedCoins);
+	)
+};
+
 class CKeyMetadata
 {
 public:
@@ -161,6 +178,17 @@ public:
         nWalletDBUpdated++;
         return Erase(std::make_pair(std::string("pool"), nPool));
     }
+	
+	bool WriteLockedCoins(const CLockedCoins lockedcoins)
+	{
+		nWalletDBUpdated++;
+		return Write(std::string("lockedcoins"), lockedcoins, true);
+	}
+	
+	bool ReadLockedCoins(CLockedCoins& lockedcoins)
+	{
+		return Read(std::string("lockedcoins"), lockedcoins);
+	}
 
     // Settings are no longer stored in wallet.dat; these are
     // used only for backwards compatibility:

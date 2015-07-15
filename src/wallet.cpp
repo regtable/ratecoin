@@ -1332,6 +1332,11 @@ bool CWallet::SelectCoinsSimple(int64_t nTargetValue, unsigned int nSpendTime, i
     {
         const CWalletTx *pcoin = output.tx;
         int i = output.i;
+		
+		// locked coins should not be selected
+		COutPoint outpoint(pcoin->GetHash(), output.i);
+		if(std::find(this->lockedcoins.vLockedCoins.begin(), this->lockedcoins.vLockedCoins.end(), outpoint) != this->lockedcoins.vLockedCoins.end())
+			continue;
 
         // Stop if we've chosen enough inputs
         if (nValueRet >= nTargetValue)

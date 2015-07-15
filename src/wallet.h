@@ -95,6 +95,8 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 	bool fSplitBlock;
+	
+	CLockedCoins lockedcoins;
 
     CWallet()
     {
@@ -105,6 +107,7 @@ public:
         pwalletdbEncryption = NULL;
         nOrderPosNext = 0;
 		fSplitBlock =  false;
+		lockedcoins.vLockedCoins.clear();
     }
     CWallet(std::string strWalletFileIn)
     {
@@ -116,6 +119,7 @@ public:
         pwalletdbEncryption = NULL;
         nOrderPosNext = 0;
 		fSplitBlock =  false;
+		lockedcoins.vLockedCoins.clear();
     }
 
     std::map<uint256, CWalletTx> mapWallet;

@@ -449,22 +449,38 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
 
 bool WalletModel::isLockedCoin(uint256 hash, unsigned int n) const
 {
-    return false;
+	COutPoint outpoint(hash, n);
+	return std::find(wallet->lockedcoins.vLockedCoins.begin(), wallet->lockedcoins.vLockedCoins.end(), outpoint) != wallet->lockedcoins.vLockedCoins.end();
 }
 
-void WalletModel::lockCoin(COutPoint& output)
+void WalletModel::lockCoin(COutPoint& outpoint)
 {
-    return;
+    wallet->lockedcoins.vLockedCoins.push_back(outpoint);
+	CWalletDB walletdb(wallet->strWalletFile);
+	
+	return;
 }
 
-void WalletModel::unlockCoin(COutPoint& output)
-{
-    return;
+void WalletModel::unlockCoin(COutPoint& outpoint)
+{	
+	for(std::vector<COutPoint>::iterator it = wallet->lockedcoins.vLockedCoins.begin(); it != wallet->lockedcoins.vLockedCoins.end(); it++)
+	{
+		if (*it == outpoint)
+		{
+			wallet->lockedcoins.vLockedCoins.erase(it);
+			break; 
+		}
+	}
+	
+	CWalletDB walletdb(wallet->strWalletFile);
+	walletdb.WriteLockedCoins(wallet->lockedcoins);
+	return;
 }
 
-void WalletModel::listLockedCoins(std::vector<COutPoint>& vOutpts)
+void WalletModel::listLockedCoins(std::vector<COutPoint>& vLockedCoins)
 {
-    return;
+	vLockedCoins = wallet->lockedcoins.vLockedCoins;
+	return;
 }
 
 //Information for coin control

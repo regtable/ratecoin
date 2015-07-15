@@ -417,6 +417,10 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             ssValue >> pwallet->nOrderPosNext;
         }
+		else if(strType == "lockedcoins")
+		{
+			ssValue >> pwallet->lockedcoins.vLockedCoins;
+		}
     } catch (...)
     {
         return false;

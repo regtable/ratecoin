@@ -428,6 +428,14 @@
          </property>
         </widget>
        </item>
+	   <item>
+         <widget class="QLabel" name="labelLocked">
+          <property name="text">
+           <string notr="true">(0 locked)</string>
+          </property>
+         </widget>
+        </item>
+	   
        <item>
         <widget class="QPushButton" name="pushButtonCustomCC">
          <property name="text">
