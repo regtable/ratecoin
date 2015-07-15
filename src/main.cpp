@@ -996,7 +996,7 @@ int64_t GetProofOfWorkReward(int64_t nFees)
 
 const int DAILY_BLOCKCOUNT =  2880;
 // miner's coin stake reward based on coin age spent (coin-days)
-int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees)
+int64_t GetProofOfStakeRewardV1(int64_t nCoinAge, int64_t nFees)
 {
     int64_t nRewardCoinYear;
 
@@ -1004,11 +1004,58 @@ int64_t GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees)
 
     int64_t nSubsidy = nCoinAge * nRewardCoinYear / 365 / COIN;
 
-
     if (fDebug && GetBoolArg("-printcreation"))
         printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRId64"\n", FormatMoney(nSubsidy).c_str(), nCoinAge);
 
     return nSubsidy + nFees;
+}
+
+int64_t GetProofOfStakeRewardV2(uint64_t nCoinAge, int64_t nFees, unsigned int nAge)
+{
+	int64_t nRewardCoinYear; //sodfm
+	unsigned int nTimeDay = 60 * 60 * 24;
+	
+	if(nAge > nTimeDay * 256) 
+		nRewardCoinYear = 25.6289 * CENT;
+	else if(nAge > nTimeDay * 128)
+		nRewardCoinYear = 17.0859 * CENT;
+	else if(nAge > nTimeDay * 64)
+		nRewardCoinYear = 11.3906 * CENT;
+	else if(nAge > nTimeDay * 32)
+		nRewardCoinYear = 7.5938 * CENT;
+	else if(nAge > nTimeDay * 16)
+		nRewardCoinYear = 5.0625 * CENT;
+	else if(nAge > nTimeDay * 8)
+		nRewardCoinYear = 3.375 * CENT;
+	else if(nAge > nTimeDay * 4)
+		nRewardCoinYear = 2.25 * CENT;
+	else if(nAge > nTimeDay * 2)
+		nRewardCoinYear = 1.5 * CENT;
+	else if(nAge > nTimeDay * 1)
+		nRewardCoinYear = 1 * CENT;
+	else
+		nRewardCoinYear = 0.25 * CENT;
+	
+	CBigNum bnSubsidy = CBigNum(nCoinAge) * nRewardCoinYear / 365 / COIN;
+	int64_t nSubsidy = bnSubsidy.getuint64();
+	
+	nSubsidy = max(nSubsidy, 100 * COIN); // minimum stake reward
+
+    if (fDebug && GetBoolArg("-printcreation"))
+        printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRId64"\n", FormatMoney(nSubsidy).c_str(), nCoinAge);
+
+    return nSubsidy + nFees;	
+}
+
+int64_t GetProofOfStakeReward(uint64_t nCoinAge, int64_t nFees, unsigned int nAge, unsigned int nTime)
+{
+	int64_t nReward = 0;
+	if(nTime > FORK_TIME)
+		nReward = GetProofOfStakeRewardV2(nCoinAge, nFees, nAge);
+	else
+		nReward = GetProofOfStakeRewardV1((int64_t)nCoinAge, nFees);
+	
+	return nReward;
 }
 
 static const int64_t nTargetTimespan = 20 * 60;  // 20 mins
@@ -1597,10 +1644,11 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     {
         // ppcoin: coin stake tx earns reward instead of paying fee
         uint64_t nCoinAge;
-        if (!vtx[1].GetCoinAge(txdb, nCoinAge))
+		unsigned int nAge;
+        if (!vtx[1].GetCoinAge(txdb, nCoinAge, nAge))
             return error("ConnectBlock() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString().substr(0,10).c_str());
 
-        int64_t nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees);
+        int64_t nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees, nAge, vtx[1].nTime);
 
         if (nStakeReward > nCalculatedStakeReward)
             return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%"PRId64" vs calculated=%"PRId64")", nStakeReward, nCalculatedStakeReward));
@@ -1889,10 +1937,11 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 // guaranteed to be in main chain by sync-checkpoint. This rule is
 // introduced to help nodes establish a consistent view of the coin
 // age (trust score) of competing branches.
-bool CTransaction::GetCoinAge(CTxDB& txdb, uint64_t& nCoinAge) const
+bool CTransaction::GetCoinAge(CTxDB& txdb, uint64_t& nCoinAge, unsigned int& nAge) const
 {
     CBigNum bnCentSecond = 0;  // coin age in the unit of cent-seconds
     nCoinAge = 0;
+	nAge = 0;
 
     if (IsCoinBase())
         return true;
@@ -1916,6 +1965,12 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, uint64_t& nCoinAge) const
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
         bnCentSecond += CBigNum(nValueIn) * (nTime-txPrev.nTime) / CENT;
+		
+		if(nAge == 0)
+			nAge = nTime - txPrev.nTime;
+		else if(nTime - txPrev.nTime < (unsigned int)nAge) //use the lowest age in the transaction to determine the age
+			nAge = nTime - txPrev.nTime;
+			
 
         if (fDebug && GetBoolArg("-printcoinage"))
             printf("coin age nValueIn=%"PRId64" nTimeDiff=%d bnCentSecond=%s\n", nValueIn, nTime - txPrev.nTime, bnCentSecond.ToString().c_str());
@@ -1937,7 +1992,8 @@ bool CBlock::GetCoinAge(uint64_t& nCoinAge) const
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
         uint64_t nTxCoinAge;
-        if (tx.GetCoinAge(txdb, nTxCoinAge))
+		unsigned int nAge;
+        if (tx.GetCoinAge(txdb, nTxCoinAge, nAge))
             nCoinAge += nTxCoinAge;
         else
             return false;
