@@ -1734,8 +1734,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 
     if (nCredit == 0 || nCredit > nBalance - nReserveBalance)
         return false;
-
-    BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
+	
+	//Since the reward is age based, if we combine dust into the coinstake, it will grab the lowest aged utxo for the reward bracket. Better to keep combination code out of the normal users toolkit.
+    /*BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
         // Attempt to add more inputs
         // Only add coins of the same key/address as kernel
@@ -1764,7 +1765,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             nCredit += pcoin.first->vout[pcoin.second].nValue;
             vwtxPrev.push_back(pcoin.first);
         }
-    }
+    }*/
 
     // Calculate coin age reward
     {
