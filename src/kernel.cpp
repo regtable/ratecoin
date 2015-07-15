@@ -10,6 +10,7 @@
 using namespace std;
 
 extern unsigned int nStakeMaxAge;
+extern unsigned int nStakeMaxAge2;
 extern unsigned int nTargetSpacing;
 extern unsigned int nTargetSpacing2;
 
@@ -34,7 +35,7 @@ int64_t GetWeight(int64_t nIntervalBeginning, int64_t nIntervalEnd)
     // this change increases active coins participating the hash and helps
     // to secure the network when proof-of-stake difficulty is low
 
-    return min(nIntervalEnd - nIntervalBeginning - nStakeMinAge, (int64_t)nStakeMaxAge);
+    return min(nIntervalEnd - nIntervalBeginning - nStakeMinAge, (int64_t)(nIntervalEnd > FORK_TIME ? nStakeMaxAge2 : nStakeMaxAge));
 }
 
 // Get the last stake modifier and its generation time from a given block

@@ -44,6 +44,7 @@ unsigned int nTargetSpacing = 1 * 30; // 30 seconds
 unsigned int nTargetSpacing2 = 3 * 60; // New block every 3 minutes
 unsigned int nStakeMinAge = 4 * 60 * 60; // 4 hours
 unsigned int nStakeMaxAge = 30 * 24 * 60 * 60;           // 30 days
+unsigned int nStakeMaxAge2 = 256 * 24 * 60 * 60;           // 256 days
 unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
 
 int nCoinbaseMaturity = 30;
