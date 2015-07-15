@@ -8,6 +8,7 @@
 #include "optionsmodel.h"
 #include "coincontrol.h"
 #include "bitcoinrpc.h"
+#include "txdb.h"
 
 #include <QApplication>
 #include <QCheckBox>
@@ -730,7 +731,8 @@ void CoinControlDialog::updateView()
     if (model && model->getOptionsModel())
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
         
-    map<QString, vector<COutput> > mapCoins;
+    CTxDB txdb("r");
+	map<QString, vector<COutput> > mapCoins;
     model->listCoins(mapCoins);
 
     BOOST_FOREACH(PAIRTYPE(QString, vector<COutput>) coins, mapCoins)
@@ -863,7 +865,12 @@ void CoinControlDialog::updateView()
 			itemOutput->setText(COLUMN_AGE_int64_t, strPad(QString::number(age), 15, " "));
 			
 			// Potential Stake
-			double nPotentialStake = nBlockSize * 0.3 / 365 * nAge / (60*60*24); //min of the max reward or the stake rate
+			uint64_t nCoinAge = 0;
+			unsigned int nAge2 = 0;
+			int64_t nFees = 0;
+			out.tx->GetCoinAge(txdb, nCoinAge, nAge2);
+
+			double nPotentialStake = GetProofOfStakeReward(nCoinAge, nFees, nAge2, GetAdjustedTime()) / COIN;
 			itemOutput->setText(COLUMN_POTENTIALSTAKE, strPad(BitcoinUnits::formatAge(nDisplayUnit, nPotentialStake * COIN), 15, " ")); //use COIN for formatting
 			itemOutput->setText(COLUMN_POTENTIALSTAKE_int64_t, strPad(QString::number((int64_t)nPotentialStake), 16, " "));
 			
