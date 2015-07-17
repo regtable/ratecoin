@@ -1,1 +1,31 @@
-src/leveldb/port/atomic_pointer.h
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.qm
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+build/*
+release/*
+src/qt/locale/*
+makefile.release
+makefile.debug
+makefile
+object_script.RATECoin-qt.Debug
+object_script.RATECoin-qt.Release
