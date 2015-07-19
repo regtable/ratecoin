@@ -864,18 +864,19 @@ void CoinControlDialog::updateView()
 			itemOutput->setText(COLUMN_AGE, strPad(BitcoinUnits::formatAge(nDisplayUnit, age), 2, " "));
 			itemOutput->setText(COLUMN_AGE_int64_t, strPad(QString::number(age), 15, " "));
 			
-			// Potential Stake
-			uint64_t nCoinAge = 0;
-			unsigned int nAge2 = 0;
-			int64_t nFees = 0;
-			out.tx->GetCoinAge(txdb, nCoinAge, nAge2);
+			// modified ** em53
+			// Single UTXO CoinAge Calc in Place
+			CBigNum bnAltCoinAge = CBigNum(out.tx->vout[out.i].nValue) * nAge / CENT;
+			bnAltCoinAge = bnAltCoinAge * CENT / (24*60*60);
+			uint64_t nAltCoinAge = bnAltCoinAge.getuint64();
 
-			double nPotentialStake = GetProofOfStakeReward(nCoinAge, nFees, nAge2, GetAdjustedTime()) / COIN;
-			itemOutput->setText(COLUMN_POTENTIALSTAKE, strPad(BitcoinUnits::formatAge(nDisplayUnit, nPotentialStake * COIN), 15, " ")); //use COIN for formatting
-			itemOutput->setText(COLUMN_POTENTIALSTAKE_int64_t, strPad(QString::number((int64_t)nPotentialStake), 16, " "));
-			
+			// Potential Stake
+			int64_t nPotentialStake = GetProofOfStakeReward(nAltCoinAge, 0, nAge, GetTime());
+			itemOutput->setText(COLUMN_POTENTIALSTAKE, strPad(BitcoinUnits::formatAge(nDisplayUnit, nPotentialStake), 15, " ")); //use COIN for formatting
+			itemOutput->setText(COLUMN_POTENTIALSTAKE_int64_t, strPad(QString::number(nPotentialStake), 16, " "));
+	
 			// Potential Stake Sum for Tree View
-			nPotentialStakeSum += nPotentialStake * COIN;
+			nPotentialStakeSum += nPotentialStake;
 			
 			// Estimated Stake Time
 			uint64_t nMin = 1;
