@@ -9,6 +9,7 @@
 #include "coincontrol.h"
 #include "bitcoinrpc.h"
 #include "txdb.h"
+#include "kernel.h"
 
 #include <QApplication>
 #include <QCheckBox>
@@ -859,23 +860,26 @@ void CoinControlDialog::updateView()
 			itemOutput->setText(COLUMN_WEIGHT, strPad(QString::number(nTxWeight), 8, " "));
 			
 			// Age
-			uint64_t nAge = (GetTime() - nTime);
+			uint64_t nAge = (GetAdjustedTime() - nTime);
 			int64_t age = COIN * nAge / (1440 * 60);
 			itemOutput->setText(COLUMN_AGE, strPad(BitcoinUnits::formatAge(nDisplayUnit, age), 2, " "));
 			itemOutput->setText(COLUMN_AGE_int64_t, strPad(QString::number(age), 15, " "));
 			
 			// Potential Stake
 			uint64_t nCoinAge = 0;
-			unsigned int nAge2 = 0;
 			int64_t nFees = 0;
+			unsigned int nAge2 = 0;
 			out.tx->GetCoinAge(txdb, nCoinAge, nAge2);
+			CBigNum bnCoinDayWeight = CBigNum(out.tx->vout[out.i].nValue) * GetWeight((int64_t)nTime, (int64_t)GetAdjustedTime()) / COIN / (24 * 60 * 60);
+			nCoinAge = bnCoinDayWeight.getuint64();
+			printf("*** nValue=%"PRId64" nCoinAge=%"PRId64" \n", out.tx->vout[out.i].nValue, nCoinAge);
 
-			double nPotentialStake = GetProofOfStakeReward(nCoinAge, nFees, nAge2, GetAdjustedTime()) / COIN;
-			itemOutput->setText(COLUMN_POTENTIALSTAKE, strPad(BitcoinUnits::formatAge(nDisplayUnit, nPotentialStake * COIN), 15, " ")); //use COIN for formatting
+			double nPotentialStake = GetProofOfStakeReward(nCoinAge, nFees, nAge, GetAdjustedTime());
+			itemOutput->setText(COLUMN_POTENTIALSTAKE, strPad(BitcoinUnits::formatAge(nDisplayUnit, nPotentialStake), 15, " ")); //use COIN for formatting
 			itemOutput->setText(COLUMN_POTENTIALSTAKE_int64_t, strPad(QString::number((int64_t)nPotentialStake), 16, " "));
 			
 			// Potential Stake Sum for Tree View
-			nPotentialStakeSum += nPotentialStake * COIN;
+			nPotentialStakeSum += nPotentialStake;
 			
 			// Estimated Stake Time
 			uint64_t nMin = 1;
