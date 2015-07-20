@@ -457,7 +457,7 @@ void WalletModel::lockCoin(COutPoint& outpoint)
 {
     wallet->lockedcoins.vLockedCoins.push_back(outpoint);
 	CWalletDB walletdb(wallet->strWalletFile);
-	
+	walletdb.WriteLockedCoins(wallet->lockedcoins);
 	return;
 }
 
