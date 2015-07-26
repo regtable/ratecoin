@@ -31,7 +31,19 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     uint256 hash = wtx.GetHash(), hashPrev = 0;
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
-    if (nNet > 0 || wtx.IsCoinBase() || wtx.IsCoinStake())
+    if (wtx.IsCoinStake())
+    {
+        TransactionRecord txrCoinStake = TransactionRecord(hash, nTime, TransactionRecord::StakeMint, "", -nDebit, wtx.GetValueOut());
+		CTxDestination address;
+		if (ExtractDestination(wtx.vout[1].scriptPubKey, address))
+        {
+			txrCoinStake.address = CBitcoinAddress(address).ToString();
+        }
+		
+		// Stake generation
+        parts.append(txrCoinStake);
+    }
+	else if (nNet > 0 || wtx.IsCoinBase())
     {
         //
         // Credit
@@ -188,9 +200,10 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     }
 
     // For generated transactions, determine maturity
-    else if(type == TransactionRecord::Generated)
+	if(type == TransactionRecord::Generated || type == TransactionRecord::StakeMint)
     {
-        if (wtx.GetBlocksToMaturity() > 0)
+        int64_t nCredit = wtx.GetCredit(true);
+        if (nCredit == 0)
         {
             status.status = TransactionStatus::Immature;
 
