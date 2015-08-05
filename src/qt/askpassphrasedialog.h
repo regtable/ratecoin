@@ -20,6 +20,7 @@ public:
         Encrypt,       /**< Ask passphrase twice and encrypt */
         UnlockStaking, /**< Ask passphrase and unlock */
         Unlock,        /**< Ask passphrase and unlock */
+		UnlockForMint, /**< Ask passphrase and unlock for minting */
         ChangePass,    /**< Ask old passphrase + new passphrase twice */
         Decrypt        /**< Ask passphrase and decrypt wallet */
     };
