@@ -286,6 +286,7 @@ bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase, b
     if(locked)
     {
         // Lock
+		wallet->fWalletUnlockMintOnly = false;
         return wallet->Lock();
     }
     else
