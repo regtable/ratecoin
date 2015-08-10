@@ -94,6 +94,9 @@ private slots:
     void buttonSelectAllClicked();
 	void customSelectCoins();
     void updateLabelLocked();
+	void buttonLockToggleClicked(bool fLock);
+	void buttonLockUTXOClicked();
+	void buttonUnlockUTXOClicked();
 };
 
 #endif // COINCONTROLDIALOG_H

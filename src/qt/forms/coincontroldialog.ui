@@ -376,13 +376,13 @@
      <widget class="QWidget" name="horizontalLayoutWidget">
       <property name="geometry">
        <rect>
-        <x>10</x>
+        <x>4</x>
         <y>0</y>
-        <width>781</width>
+        <width>951</width>
         <height>41</height>
        </rect>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0,0,0">
+      <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0,0,0,0,0,0">
        <property name="spacing">
         <number>14</number>
        </property>
@@ -395,7 +395,21 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>clear selections</string>
+          <string>Clear Selections</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonLockUTXO">
+         <property name="text">
+          <string>Lock Selected</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonUnlockUTXO">
+         <property name="text">
+          <string>Unlock Selected</string>
          </property>
         </widget>
        </item>
@@ -491,7 +505,7 @@
       <bool>false</bool>
      </property>
      <property name="columnCount">
-      <number>16</number>
+      <number>17</number>
      </property>
      <attribute name="headerShowSortIndicator" stdset="0">
       <bool>true</bool>

@@ -113,7 +113,11 @@ CoinControlDialog::CoinControlDialog(QWidget *parent) :
 	// custom Coin Control Selection Button (select less than)
     connect(ui->pushButtonCustomCC, SIGNAL(clicked()), this, SLOT(customSelectCoins()));
 	
-    ui->treeWidget->setColumnWidth(COLUMN_CHECKBOX, 45);
+	//Lock/Unlock Select Coins
+	connect(ui->pushButtonLockUTXO, SIGNAL(clicked()), this, SLOT(buttonLockUTXOClicked()));
+	connect(ui->pushButtonUnlockUTXO, SIGNAL(clicked()), this, SLOT(buttonUnlockUTXOClicked()));
+	
+    ui->treeWidget->setColumnWidth(COLUMN_CHECKBOX, 70);
     ui->treeWidget->setColumnWidth(COLUMN_AMOUNT, 100);
 	ui->treeWidget->setColumnWidth(COLUMN_CONFIRMATIONS, 85);
 	ui->treeWidget->setColumnWidth(COLUMN_AGE, 55);
@@ -195,6 +199,57 @@ void CoinControlDialog::buttonSelectAllClicked()
                 ui->treeWidget->topLevelItem(i)->setCheckState(COLUMN_CHECKBOX, state);
     ui->treeWidget->setEnabled(true);
     CoinControlDialog::updateLabels(model, this);
+}
+
+void CoinControlDialog::buttonLockToggleClicked(bool fLock)
+{
+	map<QString, vector<COutput> > mapCoins;
+	model->listCoins(mapCoins);
+
+	//iterate through our tree widget
+    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); i++)
+    {
+        if (ui->treeWidget->topLevelItem(i)->checkState(COLUMN_CHECKBOX) != Qt::Unchecked)
+        {
+			//make an outpoint from info in QT table 
+			COutPoint outpt(uint256(ui->treeWidget->topLevelItem(i)->text(COLUMN_TXHASH).toStdString()), ui->treeWidget->topLevelItem(i)->text(COLUMN_VOUT_INDEX).toUInt());
+			
+			//check if the utxo is already locked
+			bool isLocked = model->isLockedCoin(uint256(ui->treeWidget->topLevelItem(i)->text(COLUMN_TXHASH).toStdString()), ui->treeWidget->topLevelItem(i)->text(COLUMN_VOUT_INDEX).toUInt());
+			
+			//uncheck the outpoint in coin control
+			ui->treeWidget->topLevelItem(i)->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
+			
+			if(fLock)
+			{
+				if(isLocked) // don't need to relock an already locked utxo
+					continue;
+				model->lockCoin(outpt);
+				ui->treeWidget->topLevelItem(i)->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/lock_closed"));
+				updateLabelLocked();
+			}
+			else
+			{
+				if(!isLocked) // don't need to unlock a utxo that hasnt been locked
+					continue;
+				model->unlockCoin(outpt);
+				ui->treeWidget->topLevelItem(i)->setIcon(COLUMN_CHECKBOX, QIcon());
+				updateLabelLocked();
+			}
+		}
+	}
+	CoinControlDialog::updateLabels(model, this);
+	updateView();
+}
+
+void CoinControlDialog::buttonLockUTXOClicked()
+{
+	buttonLockToggleClicked(true);
+}
+
+void CoinControlDialog::buttonUnlockUTXOClicked()
+{
+	buttonLockToggleClicked(false);
 }
 
 void CoinControlDialog::customSelectCoins()
@@ -371,7 +426,6 @@ void CoinControlDialog::lockCoin()
 
     COutPoint outpt(uint256(contextMenuItem->text(COLUMN_TXHASH).toStdString()), contextMenuItem->text(COLUMN_VOUT_INDEX).toUInt());
     model->lockCoin(outpt);
-    contextMenuItem->setDisabled(true);
     contextMenuItem->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/lock_closed"));
     updateLabelLocked();
 }
@@ -381,7 +435,6 @@ void CoinControlDialog::unlockCoin()
 {
     COutPoint outpt(uint256(contextMenuItem->text(COLUMN_TXHASH).toStdString()), contextMenuItem->text(COLUMN_VOUT_INDEX).toUInt());
     model->unlockCoin(outpt);
-    contextMenuItem->setDisabled(false);
     contextMenuItem->setIcon(COLUMN_CHECKBOX, QIcon());
     updateLabelLocked();
 }
@@ -907,7 +960,6 @@ void CoinControlDialog::updateView()
             {
                 COutPoint outpt(txhash, out.i);
                 coinControl->UnSelect(outpt); // just to be sure
-                itemOutput->setDisabled(true);
                 itemOutput->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/lock_closed"));
             }
               
