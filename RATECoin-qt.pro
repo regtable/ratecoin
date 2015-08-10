@@ -3,11 +3,12 @@ TARGET = RATECoin-qt
 VERSION = 1.0.0
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
-CONFIG += no_include_pwd
+CONFIG += no_include_pwd static
 CONFIG += thread
+QT += core gui xml network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 lessThan(QT_MAJOR_VERSION, 5): CONFIG += static
-QMAKE_CXXFLAGS = -fpermissive
+#QMAKE_CXXFLAGS = -fpermissive
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets
@@ -103,6 +104,7 @@ contains(USE_DBUS, 1) {
 contains(USE_IPV6, -) {
     message(Building without IPv6 support)
 } else {
+    message(Building with IPv6 support)
     count(USE_IPV6, 0) {
         USE_IPV6=1
     }
@@ -385,9 +387,9 @@ FORMS += \
     src/qt/forms/optionsdialog.ui
 
 contains(USE_QRCODE, 1) {
-HEADERS += src/qt/qrcodedialog.h
-SOURCES += src/qt/qrcodedialog.cpp
-FORMS += src/qt/forms/qrcodedialog.ui
+    HEADERS += src/qt/qrcodedialog.h
+    SOURCES += src/qt/qrcodedialog.cpp
+    FORMS += src/qt/forms/qrcodedialog.ui
 }
 
 
@@ -514,5 +516,10 @@ contains(RELEASE, 1) {
         LIBS += -Wl,-Bdynamic
     }
 }
+
+themes.path = $$OUT_PWD/$$DESTDIR/themes
+macx:themes.path = $$OUT_PWD/$$DESTDIR/RATECoin-Qt.app/Contents/MacOS/themes
+themes.files = src/qt/res/themes/*
+INSTALLS += themes
 
 system($$QMAKE_LRELEASE -silent $$_PRO_FILE_)

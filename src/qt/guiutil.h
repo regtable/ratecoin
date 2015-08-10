@@ -4,6 +4,7 @@
 #include <QString>
 #include <QObject>
 #include <QMessageBox>
+#include <QLabel>
 
 QT_BEGIN_NAMESPACE
 class QFont;
@@ -12,6 +13,7 @@ class QWidget;
 class QDateTime;
 class QUrl;
 class QAbstractItemView;
+class QLabel;
 QT_END_NAMESPACE
 class SendCoinsRecipient;
 
