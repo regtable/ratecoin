@@ -420,6 +420,10 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 		{
 			ssValue >> pwallet->lockedcoins.vLockedCoins;
 		}
+		else if (strType == "stakeSplitThreshold") //presstab HyperStake
+		{
+            ssValue >> pwallet->nStakeSplitThreshold;
+		}
     } catch (...)
     {
         return false;

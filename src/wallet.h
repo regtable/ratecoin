@@ -95,6 +95,7 @@ public:
     unsigned int nMasterKeyMaxID;
 	bool fSplitBlock;
 	bool fWalletUnlockMintOnly;
+	uint64_t nStakeSplitThreshold;
 	
 	CLockedCoins lockedcoins;
 
@@ -109,6 +110,7 @@ public:
 		fSplitBlock =  false;
 		lockedcoins.vLockedCoins.clear();
 		fWalletUnlockMintOnly = false;
+		nStakeSplitThreshold = 10000;
     }
     CWallet(std::string strWalletFileIn)
     {
@@ -122,6 +124,7 @@ public:
 		fSplitBlock =  false;
 		lockedcoins.vLockedCoins.clear();
 		fWalletUnlockMintOnly = false;
+		nStakeSplitThreshold = 10000;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
