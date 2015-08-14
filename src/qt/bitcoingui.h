@@ -94,6 +94,8 @@ private:
     QAction *aboutQtAction;
     QAction *themeCustomAction;
     QAction *openRPCConsoleAction;
+	QAction *checkWalletAction;
+	QAction *repairWalletAction;
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
@@ -183,6 +185,10 @@ private slots:
     void unlockWallet();
 	/** Ask for passphrase to unlock wallet for the session to mint */
 	void unlockWalletForMint();
+	/** Check the wallet */
+	void checkWallet();
+	/** Repair the wallet */
+	void repairWallet();
 	
     void lockWallet();
 	void lockWalletToggle();
