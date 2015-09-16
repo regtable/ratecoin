@@ -177,6 +177,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 	}
 	if (model->getSplitBlock())
 		nSplitBlock = int(ui->splitBlockLineEdit->text().toDouble());
+
 	
     // Format confirmation message
     QStringList formatted;
@@ -189,6 +190,13 @@ void SendCoinsDialog::on_sendButton_clicked()
 		#else
 		formatted.append(tr("<b>%1</b> to %2 (%3)").arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, rcp.amount), rcp.label.toHtmlEscaped(), rcp.address));
 		#endif
+		}
+		else if(rcp.amount / nSplitBlock < 100 * COIN)
+		{
+			QMessageBox::warning(this, tr("Send Coins"),
+				tr("Split block outputs need to be over 100 XRA each."),
+				QMessageBox::Ok, QMessageBox::Ok);
+			return;
 		}
 		else
 		{
