@@ -1828,3 +1828,47 @@ Value getstakesplitthreshold(const Array& params, bool fHelp)
 	return result;
 
 }
+
+// presstab RateCoin
+Value coinlock(const Array& params, bool fHelp)
+{
+	    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "coinlock <command>\n"
+            "Commands: \n"
+			"display - shows any locked coins you have. A locked coin will not attempt to stake.\n"
+			"unlockall - unlocks all locked coins\n"
+			"lockall - locks all coins from staking\n");	
+	std::string strCommand = params[0].get_str();
+	Object result;
+	if(strCommand == "display")
+	{
+		std::vector<COutPoint> vLockedCoins;
+		vLockedCoins = pwalletMain->lockedcoins.vLockedCoins;
+		for(unsigned int i = 0; i < vLockedCoins.size(); i++)
+		{
+			result.push_back(Pair("Locked Outpoint:", vLockedCoins[i].ToString()));
+		}
+	}
+	else if(strCommand == "unlockall")
+	{
+		pwalletMain->lockedcoins.vLockedCoins.clear();
+		CWalletDB walletdb(pwalletMain->strWalletFile);
+		result.push_back(Pair("Unlocked All and Wrote to DB?", walletdb.WriteLockedCoins(pwalletMain->lockedcoins)));
+	}
+	else if(strCommand == "lockall")
+	{
+		pwalletMain->lockedcoins.vLockedCoins.clear();
+		vector<COutput> vCoins;
+		pwalletMain->AvailableCoinsMinConf(vCoins, 0); //since we are locking 'all coins' we will even lock 0 conf coins
+		for (unsigned int i = 0; i < vCoins.size(); i++)
+			pwalletMain->lockedcoins.vLockedCoins.push_back(COutPoint(vCoins[i].tx->GetHash(), vCoins[i].i));
+		
+		CWalletDB walletdb(pwalletMain->strWalletFile);
+		result.push_back(Pair("Locked All and Wrote to DB?", walletdb.WriteLockedCoins(pwalletMain->lockedcoins)));
+	}
+	else
+		return "Did not recognize command";
+	
+	return result;
+}
