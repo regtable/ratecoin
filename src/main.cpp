@@ -2379,6 +2379,11 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     }
 
     printf("ProcessBlock: ACCEPTED\n");
+	
+	// If turned on MultiSend will send a transaction (or more) on the 30th confirmation of a stake
+	if (pwalletMain->fMultiSend)
+		if (!pwalletMain->MultiSend() )
+			printf("ERROR While trying to use MultiSend");
 
     // ppcoin: if responsible for sync-checkpoint send it
     if (pfrom && !CSyncCheckpoint::strMasterPrivKey.empty())

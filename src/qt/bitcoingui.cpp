@@ -11,6 +11,7 @@
 #include "signverifymessagedialog.h"
 #include "optionsdialog.h"
 #include "aboutdialog.h"
+#include "charitydialog.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
 #include "editaddressdialog.h"
@@ -125,11 +126,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     transactionsPage->setLayout(vbox);
 
     addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
-
     receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
-
     sendCoinsPage = new SendCoinsDialog(this);
-
+	stakeForCharityDialog = new StakeForCharityDialog(this);
     signVerifyMessageDialog = new SignVerifyMessageDialog(this);
 
     centralWidget = new QStackedWidget(this);
@@ -138,6 +137,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     centralWidget->addWidget(addressBookPage);
     centralWidget->addWidget(receiveCoinsPage);
     centralWidget->addWidget(sendCoinsPage);
+	centralWidget->addWidget(stakeForCharityDialog);
     setCentralWidget(centralWidget);
 
     // Create status bar
@@ -208,6 +208,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     connect(addressBookPage, SIGNAL(verifyMessage(QString)), this, SLOT(gotoVerifyMessageTab(QString)));
     // Clicking on "Sign Message" in the receive coins page sends you to the sign message tab
     connect(receiveCoinsPage, SIGNAL(signMessage(QString)), this, SLOT(gotoSignMessageTab(QString)));
+	// Clicking on stake for charity button in the address book sends you to the multisend page
+    connect(addressBookPage, SIGNAL(stakeForCharitySignal(QString)), this, SLOT(charityClicked(QString)));
 
     gotoOverviewPage();
 }
@@ -261,6 +263,12 @@ void BitcoinGUI::createActions()
 	
 	repairWalletAction = new QAction(QIcon(":/icons/options"), tr("&Repair Wallet..."), this);
 	repairWalletAction->setStatusTip(tr("Fix wallet integrity and remove orphans"));
+	
+	charityAction = new QAction(QIcon(":/icons/about"), tr("&MultiSend"), this);
+    charityAction->setToolTip(tr("MultiSend Settings"));
+    charityAction->setCheckable(true);
+	charityAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
+	tabGroup->addAction(charityAction);
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
@@ -319,6 +327,8 @@ void BitcoinGUI::createActions()
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
 	connect(checkWalletAction, SIGNAL(triggered()), this, SLOT(checkWallet()));
 	connect(repairWalletAction, SIGNAL(triggered()), this, SLOT(repairWallet()));
+	connect(charityAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+	connect(charityAction, SIGNAL(triggered()), this, SLOT(charityClicked()));
 
 	/* zeewolf: Hot swappable wallet themes */
     if (themesList.count()>0)
@@ -366,6 +376,7 @@ void BitcoinGUI::createMenuBar()
     settings->addAction(unlockWalletAction);
 	settings->addAction(checkWalletAction);
 	settings->addAction(repairWalletAction);
+	settings->addAction(charityAction);
     settings->addSeparator();
     settings->addAction(optionsAction);
 	
@@ -460,6 +471,7 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         sendCoinsPage->setModel(walletModel);
         signVerifyMessageDialog->setModel(walletModel);
+		stakeForCharityDialog->setModel(walletModel);
 
         setEncryptionStatus(walletModel->getEncryptionStatus());
         connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
@@ -725,6 +737,8 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
                     .data(Qt::EditRole).toULongLong();
     if(!clientModel->inInitialBlockDownload())
     {
+		fMultiSendNotify = pwalletMain->fMultiSendNotify;
+		
         // On new transaction, make an info balloon
         // Unless the initial block download is in progress, to prevent balloon-spam
         QString date = ttm->index(start, TransactionTableModel::Date, parent)
@@ -738,7 +752,7 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
                         .data(Qt::DecorationRole));
 
         notificator->notify(Notificator::Information,
-                            (amount)<0 ? tr("Sent transaction") :
+                            (amount)<0 ? (fMultiSendNotify == true ? tr("Sent MultiSend transaction") : tr("Sent transaction") ):
                                          tr("Incoming transaction"),
                               tr("Date: %1\n"
                                  "Amount: %2\n"
@@ -748,6 +762,8 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
                               .arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), amount, true))
                               .arg(type)
                               .arg(address), icon);
+							  
+		pwalletMain->fMultiSendNotify = false;
     }
 }
 
@@ -1090,50 +1106,87 @@ void BitcoinGUI::updateStakingIcon()
     uint64_t nMinWeight = 0, nMaxWeight = 0, nWeight = 0;
     if (pwalletMain)
         pwalletMain->GetStakeWeight(*pwalletMain, nMinWeight, nMaxWeight, nWeight);
+	if(walletModel)
+		fMultiSend = pwalletMain->fMultiSend;
+	
+	uint64_t nNetworkWeight = GetPoSKernelPS();
+    unsigned nEstimateTime = 0;
+	if(GetAdjustedTime() > FORK_TIME)
+		nEstimateTime = nTargetSpacing2 * nNetworkWeight / nWeight;
+	else
+		nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
 
-    if (nLastCoinStakeSearchInterval && nWeight)
+    if (pwalletMain && pwalletMain->IsLocked())
     {
-        uint64_t nNetworkWeight = GetPoSKernelPS();
-        unsigned nEstimateTime = 0;
-		if(GetAdjustedTime() > FORK_TIME)
-			nEstimateTime = nTargetSpacing2 * nNetworkWeight / nWeight;
-		else
-			nEstimateTime = nTargetSpacing * nNetworkWeight / nWeight;
+        labelStakingIcon->setToolTip(tr("Not minting because wallet is locked.<br>Network weight is %1.<br>MultiSend: %2").arg(nNetworkWeight).arg(fMultiSend ? tr("Active"):tr("Not Active")));
+        labelStakingIcon->setEnabled(false);
+        labelStakingIcon->setPixmap(QIcon(":/icons/mining_inactive").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+    }
+    else if (vNodes.empty())
+    {
+        labelStakingIcon->setToolTip(tr("Not minting because wallet is offline.<br>Network weight is %1.<br>MultiSend: %2").arg(nNetworkWeight).arg(fMultiSend ? tr("Active"):tr("Not Active")));
+        labelStakingIcon->setEnabled(false);
+        labelStakingIcon->setPixmap(QIcon(":/icons/mining_inactive").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+    }
+    else if (IsInitialBlockDownload())
+    {
+        labelStakingIcon->setToolTip(tr("Not minting because wallet is syncing.<br>Network weight is %1.<br>MultiSend: %2").arg(nNetworkWeight).arg(fMultiSend ? tr("Active"):tr("Not Active")));
+        labelStakingIcon->setEnabled(false);
+        labelStakingIcon->setPixmap(QIcon(":/icons/mining_inactive").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+    }
+    else if (!nWeight)
+    {
+        labelStakingIcon->setToolTip(tr("Not minting because you don't have mature coins.<br>Network weight is %1<br>MultiSend: %2").arg(nNetworkWeight).arg(fMultiSend ? tr("Active"):tr("Not Active")));
+        labelStakingIcon->setEnabled(false);
+        labelStakingIcon->setPixmap(QIcon(":/icons/mining_inactive").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+    }
+    else if (nLastCoinStakeSearchInterval)
+    {	
+		uint64_t nAccuracyAdjustment = 1; // this is a manual adjustment param if needed to make more accurate
+        uint64_t nEstimateTime = 180 * nNetworkWeight / nWeight / nAccuracyAdjustment;
+	
+		uint64_t nRangeLow = nEstimateTime;
+		uint64_t nRangeHigh = nEstimateTime * 1.5;
         QString text;
         if (nEstimateTime < 60)
         {
-            text = tr("%n second(s)", "", nEstimateTime);
+            text = tr("%1 - %2 seconds").arg(nRangeLow).arg(nRangeHigh);
         }
         else if (nEstimateTime < 60*60)
         {
-            text = tr("%n minute(s)", "", nEstimateTime/60);
+            text = tr("%1 - %2 minutes").arg(nRangeLow / 60).arg(nRangeHigh / 60);
         }
         else if (nEstimateTime < 24*60*60)
         {
-            text = tr("%n hour(s)", "", nEstimateTime/(60*60));
+            text = tr("%1 - %2 hours").arg(nRangeLow / (60*60)).arg(nRangeHigh / (60*60));
         }
         else
         {
-            text = tr("%n day(s)", "", nEstimateTime/(60*60*24));
+            text = tr("%1 - %2 days").arg(nRangeLow / (60*60*24)).arg(nRangeHigh / (60*60*24));
         }
 
         labelStakingIcon->setPixmap(QIcon(":/icons/staking_on").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        labelStakingIcon->setToolTip(tr("Staking.<br>Your weight is %1<br>Network weight is %2<br>Expected time to earn reward is %3").arg(nWeight).arg(nNetworkWeight).arg(text));
+        labelStakingIcon->setEnabled(true);
+        labelStakingIcon->setToolTip(tr("Minting.<br>Your weight is %1.<br>Network weight is %2.<br><b>Estimated</b> next stake in %3.<br>MultiSend: %4").arg(nWeight).arg(nNetworkWeight).arg(text).arg(fMultiSend ? tr("Active"):tr("Not Active")));
     }
     else
     {
-        labelStakingIcon->setPixmap(QIcon(":/icons/staking_off").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        if (pwalletMain && pwalletMain->IsLocked())
-            labelStakingIcon->setToolTip(tr("Not staking because wallet is locked"));
-        else if (vNodes.empty())
-            labelStakingIcon->setToolTip(tr("Not staking because wallet is offline"));
-        else if (IsInitialBlockDownload())
-            labelStakingIcon->setToolTip(tr("Not staking because wallet is syncing"));
-        else if (!nWeight)
-            labelStakingIcon->setToolTip(tr("Not staking because you don't have mature coins"));
-        else
-            labelStakingIcon->setToolTip(tr("Not staking"));
+        labelStakingIcon->setToolTip(tr("Not minting."));
+        labelStakingIcon->setEnabled(false);
+        labelStakingIcon->setPixmap(QIcon(":/icons/mining_inactive").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
     }
+}
+
+void BitcoinGUI::charityClicked(QString addr)
+{
+    charityAction->setChecked(true);
+    centralWidget->setCurrentWidget(stakeForCharityDialog);
+
+    if(!addr.isEmpty())
+        stakeForCharityDialog->setAddress(addr);
+
+    exportAction->setEnabled(false);
+    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
 
 /* zeewolf: Hot swappable wallet themes */

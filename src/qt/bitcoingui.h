@@ -14,6 +14,7 @@ class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class Notificator;
 class RPCConsole;
+class StakeForCharityDialog;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -65,6 +66,7 @@ private:
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
+	StakeForCharityDialog *stakeForCharityDialog;
 
     QLabel *labelEncryptionIcon;
     QLabel *labelStakingIcon;
@@ -96,6 +98,7 @@ private:
     QAction *openRPCConsoleAction;
 	QAction *checkWalletAction;
 	QAction *repairWalletAction;
+	QAction *charityAction;
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
@@ -111,6 +114,9 @@ private:
     QString themesDir;
     QAction *customActions[100];
     /* Themes support */
+	
+	bool fMultiSend;
+	bool fMultiSendNotify;
 
     /** Create the main UI actions. */
     void createActions();
@@ -199,6 +205,7 @@ private slots:
     void toggleHidden();
 
     void updateStakingIcon();
+	void charityClicked(QString addr = "");
 	
 	/** Load external QSS stylesheet */
     void changeTheme(QString theme);

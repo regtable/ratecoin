@@ -309,6 +309,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "setstakesplitthreshold",  &setstakesplitthreshold,  false,  false},
 	{ "getstakesplitthreshold",  &getstakesplitthreshold,  false,  false},
 	{ "coinlock",  &coinlock,  false,  false},
+	{ "multisend",        &multisend,        false,  false },
 };
 
 CRPCTable::CRPCTable()
