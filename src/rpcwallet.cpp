@@ -1832,12 +1832,14 @@ Value getstakesplitthreshold(const Array& params, bool fHelp)
 // presstab RateCoin
 Value coinlock(const Array& params, bool fHelp)
 {
-	    if (fHelp || params.size() != 1)
+	    if (fHelp || params.size() > 3)
         throw runtime_error(
             "coinlock <command>\n"
             "Commands: \n"
 			"display - shows any locked coins you have. A locked coin will not attempt to stake.\n"
+			"unlock <txid><index>\n"
 			"unlockall - unlocks all locked coins\n"
+			"lock <txid><index>\n"
 			"lockall - locks all coins from staking\n");	
 	std::string strCommand = params[0].get_str();
 	Object result;
@@ -1866,6 +1868,40 @@ Value coinlock(const Array& params, bool fHelp)
 		
 		CWalletDB walletdb(pwalletMain->strWalletFile);
 		result.push_back(Pair("Locked All and Wrote to DB?", walletdb.WriteLockedCoins(pwalletMain->lockedcoins)));
+	}
+	else if(strCommand == "lock")
+	{
+		if(params.size() != 3)
+			return "parameters incorrectly entered";
+		
+		uint256 hash;
+		hash.SetHex(params[1].get_str());
+		unsigned int nIndex = boost::lexical_cast<unsigned int>(params[2].get_str());
+		
+		pwalletMain->lockedcoins.vLockedCoins.push_back(COutPoint(hash, nIndex));
+		CWalletDB walletdb(pwalletMain->strWalletFile);
+		result.push_back(Pair("Lock Coin and Wrote to DB?", walletdb.WriteLockedCoins(pwalletMain->lockedcoins)));
+	}
+	else if(strCommand == "unlock")
+	{
+		if(params.size() != 3)
+			return "parameters incorrectly entered";
+		
+		uint256 hash;
+		hash.SetHex(params[1].get_str());
+		unsigned int nIndex = boost::lexical_cast<unsigned int>(params[2].get_str());
+		COutPoint outpoint = COutPoint(hash, nIndex);
+		
+		for(std::vector<COutPoint>::iterator it = pwalletMain->lockedcoins.vLockedCoins.begin(); it != pwalletMain->lockedcoins.vLockedCoins.end(); it++)
+		{
+			if (*it == outpoint)
+			{
+				pwalletMain->lockedcoins.vLockedCoins.erase(it);
+				break; 
+			}
+		}
+		CWalletDB walletdb(pwalletMain->strWalletFile);
+		result.push_back(Pair("Unlocked Coin and Wrote to DB?", walletdb.WriteLockedCoins(pwalletMain->lockedcoins)));
 	}
 	else
 		return "Did not recognize command";
