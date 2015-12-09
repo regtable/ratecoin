@@ -1157,7 +1157,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
         return error("CheckProofOfWork() : nBits below minimum work");
 
     // Check proof of work matches claimed amount
-    if (hash > bnTarget.getuint256())
+    if (hash > bnTarget.getuint256() && hash != hashGenesisBlockTestNet)
         return error("CheckProofOfWork() : hash doesn't match nBits");
 
     return true;
@@ -2570,8 +2570,12 @@ bool LoadBlockIndex(bool fAllowNew)
             return false;
 
         const char* pszTimestamp = "Sun, 14 Jun 2015 17:02:09 GMT";
+		if(fTestNet)
+			pszTimestamp = "Testnet Started 12-09-2015";
         CTransaction txNew;
         txNew.nTime = 1434301329;
+		if(fTestNet)
+			txNew.nTime = 1449676274;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 0 << CBigNum(42) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
@@ -2586,7 +2590,8 @@ bool LoadBlockIndex(bool fAllowNew)
         block.nNonce   = 1261686;
 		if(fTestNet)
         {
-            block.nNonce   = 1261686;
+            block.nTime = 1449676274;
+			block.nNonce   = 3526195;
         }
         if (false  && (block.GetHash() != hashGenesisBlock)) {
 
@@ -2610,7 +2615,7 @@ bool LoadBlockIndex(bool fAllowNew)
         printf("block.nNonce = %u \n", block.nNonce);
 
         //// debug print
-        assert(block.hashMerkleRoot == uint256("0xb05dfd9cbe22c0355a074ad20c5fa882bc37ecb7afaefd4ef48d33c088006e5d"));
+        assert(block.hashMerkleRoot == (!fTestNet ? uint256("0xb05dfd9cbe22c0355a074ad20c5fa882bc37ecb7afaefd4ef48d33c088006e5d") : uint256("0x6ed1e0e9a14eb1d710cf0e2e5d16bb7390e62654182cecc41ed484c754ec003e")));
         block.print();
         assert(block.GetHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet));
         assert(block.CheckBlock());

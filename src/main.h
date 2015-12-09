@@ -53,7 +53,7 @@ static const int fHaveUPnP = false;
 #endif
 
 static const uint256 hashGenesisBlock("0x0000093f866ed96661b2b4893f1c9e4f163698acbebfb8754da507c7f07090e9");
-static const uint256 hashGenesisBlockTestNet("0x0000093f866ed96661b2b4893f1c9e4f163698acbebfb8754da507c7f07090e9");
+static const uint256 hashGenesisBlockTestNet("0xa0bb978c156bb39d79266ac6943d9da2ba9a76e847b5e1744aa59a3899f19ab8");
 inline int64_t PastDrift(int64_t nTime)   
 { 
 	if(nTime < FORK_TIME)
