@@ -166,6 +166,7 @@ Value getworkex(const Array& params, bool fHelp)
         // Update nTime
         pblock->nTime = max(pindexPrev->GetPastTimeLimit()+1, GetAdjustedTime());
         pblock->nNonce = 0;
+		pblock->nStakeRateVote = 25;
 
         // Update nExtraNonce
         static unsigned int nExtraNonce = 0;
@@ -229,6 +230,7 @@ Value getworkex(const Array& params, bool fHelp)
 
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
+		pblock->nStakeRateVote = 25;
 
         if(coinbase.size() == 0)
             pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
@@ -306,8 +308,9 @@ Value getwork(const Array& params, bool fHelp)
         }
 
         // Update nTime
-        pblock->UpdateTime(pindexPrev);
+        //pblock->UpdateTime(pindexPrev);
         pblock->nNonce = 0;
+		pblock->nStakeRateVote = 25;
 
         // Update nExtraNonce
         static unsigned int nExtraNonce = 0;
@@ -350,6 +353,7 @@ Value getwork(const Array& params, bool fHelp)
 
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
+		pblock->nStakeRateVote = 25;
         pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
@@ -440,8 +444,9 @@ Value getblocktemplate(const Array& params, bool fHelp)
     }
 
     // Update nTime
-    pblock->UpdateTime(pindexPrev);
+    //pblock->UpdateTime(pindexPrev);
     pblock->nNonce = 0;
+	pblock->nStakeRateVote = 25;
 
     Array transactions;
     map<uint256, int64_t> setTxIndex;

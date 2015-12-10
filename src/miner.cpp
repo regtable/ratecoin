@@ -369,6 +369,7 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake, int64_t* pFees)
         if (!fProofOfStake)
             pblock->UpdateTime(pindexPrev);
         pblock->nNonce         = 0;
+		pblock->nStakeRateVote = 25;
     }
 
     return pblock.release();
@@ -409,6 +410,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
             unsigned int nTime;
             unsigned int nBits;
             unsigned int nNonce;
+			unsigned int nStakeRateVote;
         }
         block;
         unsigned char pchPadding0[64];
@@ -424,6 +426,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
     tmp.block.nTime          = pblock->nTime;
     tmp.block.nBits          = pblock->nBits;
     tmp.block.nNonce         = pblock->nNonce;
+	tmp.block.nStakeRateVote = pblock->nStakeRateVote;
 
     FormatHashBlocks(&tmp.block, sizeof(tmp.block));
     FormatHashBlocks(&tmp.hash1, sizeof(tmp.hash1));

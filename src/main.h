@@ -53,7 +53,7 @@ static const int fHaveUPnP = false;
 #endif
 
 static const uint256 hashGenesisBlock("0x0000093f866ed96661b2b4893f1c9e4f163698acbebfb8754da507c7f07090e9");
-static const uint256 hashGenesisBlockTestNet("0xa0bb978c156bb39d79266ac6943d9da2ba9a76e847b5e1744aa59a3899f19ab8");
+static const uint256 hashGenesisBlockTestNet("0x257ad90d83458ce67b309f1cbe65e28cbebcca2618d86db8b0cc0fd025b2a678");
 inline int64_t PastDrift(int64_t nTime)   
 { 
 	if(nTime < FORK_TIME)
@@ -857,6 +857,7 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
+	unsigned int nStakeRateVote;
 
     // network and disk
     std::vector<CTransaction> vtx;
@@ -885,6 +886,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+		READWRITE(nStakeRateVote);
 
         // ConnectBlock depends on vtx following header to generate CDiskTxPos
         if (!(nType & (SER_GETHASH|SER_BLOCKHEADERONLY)))
@@ -907,6 +909,7 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+		nStakeRateVote = 0;
         vtx.clear();
         vchBlockSig.clear();
         vMerkleTree.clear();
@@ -920,7 +923,7 @@ public:
 
     uint256 GetHash() const
     {
-        return Hash9(BEGIN(nVersion), END(nNonce));
+        return Hash9(BEGIN(nVersion), END(nStakeRateVote));
     }
 
     int64_t GetBlockTime() const
@@ -1072,12 +1075,12 @@ public:
 
     void print() const
     {
-        printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu", vchBlockSig=%s)\n",
+        printf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, nStakeRateVote=%u, vtx=%"PRIszu", vchBlockSig=%s)\n",
             GetHash().ToString().c_str(),
             nVersion,
             hashPrevBlock.ToString().c_str(),
             hashMerkleRoot.ToString().c_str(),
-            nTime, nBits, nNonce,
+            nTime, nBits, nNonce, nStakeRateVote,
             vtx.size(),
             HexStr(vchBlockSig.begin(), vchBlockSig.end()).c_str());
         for (unsigned int i = 0; i < vtx.size(); i++)
@@ -1155,6 +1158,7 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
+	unsigned int nStakeRateVote;
 
     CBlockIndex()
     {
@@ -1179,6 +1183,7 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+		nStakeRateVote = 0;
     }
 
     CBlockIndex(unsigned int nFileIn, unsigned int nBlockPosIn, CBlock& block)
@@ -1213,6 +1218,7 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+		nStakeRateVote = block.nStakeRateVote;
     }
 
     CBlock GetBlockHeader() const
@@ -1225,6 +1231,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+		block.nStakeRateVote = nStakeRateVote;
         return block;
     }
 
@@ -1408,6 +1415,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+		READWRITE(nStakeRateVote);
         READWRITE(blockHash);
     )
 
@@ -1423,6 +1431,7 @@ public:
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
+		block.nStakeRateVote = nStakeRateVote;
 
         const_cast<CDiskBlockIndex*>(this)->blockHash = block.GetHash();
 
