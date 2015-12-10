@@ -1048,10 +1048,42 @@ int64_t GetProofOfStakeRewardV2(uint64_t nCoinAge, int64_t nFees, unsigned int n
     return nSubsidy + nFees;	
 }
 
-int64_t GetProofOfStakeReward(uint64_t nCoinAge, int64_t nFees, unsigned int nAge, unsigned int nTime)
+int64_t GetProofOfStakeRewardV3(uint64_t nCoinAge, int64_t nFees, unsigned int nAge, unsigned int nHeight)
+{
+	int64_t nRewardCoinYear;
+	unsigned int nTimeDay = 60 * 60 * 24;
+	
+	//calculate the average vote over the last 100 blocks
+	CBlockIndex* pindex  = FindBlockByHeight(nHeight);
+	unsigned int nStakeRate = pindex->nStakeRateVote;
+	for(unsigned int i = 0; i < 99; i++)
+	{
+		pindex = pindex->pprev;
+		nStakeRate += pindex->nStakeRateVote;
+	}
+	nStakeRate /= 100;
+	
+	//apply rate for final reward calculation
+	printf("GetProofOfStakeRewardV3 %s", nStakeRate);
+	nRewardCoinYear = nStakeRate * CENT;
+	CBigNum bnSubsidy = CBigNum(nCoinAge) * nRewardCoinYear / 365 / COIN;
+	int64_t nSubsidy = bnSubsidy.getuint64();
+	
+	nSubsidy = max(nSubsidy, 1 * COIN); // minimum stake reward
+
+    if (fDebug && GetBoolArg("-printcreation"))
+        printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRId64"\n", FormatMoney(nSubsidy).c_str(), nCoinAge);
+
+    return nSubsidy + nFees;	
+}
+
+int64_t GetProofOfStakeReward(uint64_t nCoinAge, int64_t nFees, unsigned int nAge, unsigned int nTime, unsigned int nHeight)
 {
 	int64_t nReward = 0;
-	if(nTime > FORK_TIME)
+	
+	if(fTestNet)
+		GetProofOfStakeRewardV3(nCoinAge, nFees, nAge, nHeight);
+	else if(nTime > FORK_TIME)
 		nReward = GetProofOfStakeRewardV2(nCoinAge, nFees, nAge);
 	else
 		nReward = GetProofOfStakeRewardV1((int64_t)nCoinAge, nFees);
@@ -1649,7 +1681,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         if (!vtx[1].GetCoinAge(txdb, nCoinAge, nAge))
             return error("ConnectBlock() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString().substr(0,10).c_str());
 
-        int64_t nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees, nAge, vtx[1].nTime);
+        int64_t nCalculatedStakeReward = GetProofOfStakeReward(nCoinAge, nFees, nAge, vtx[1].nTime, pindex->nHeight - 1);
 
         if (nStakeReward > nCalculatedStakeReward)
             return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%"PRId64" vs calculated=%"PRId64")", nStakeReward, nCalculatedStakeReward));

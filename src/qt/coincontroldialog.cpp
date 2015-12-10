@@ -924,7 +924,7 @@ void CoinControlDialog::updateView()
 			uint64_t nAltCoinAge = bnAltCoinAge.getuint64();
 
 			// Potential Stake
-			int64_t nPotentialStake = GetProofOfStakeReward(nAltCoinAge, 0, nAge, GetTime());
+			int64_t nPotentialStake = GetProofOfStakeReward(nAltCoinAge, 0, nAge, GetTime(), nBestHeight);
 			itemOutput->setText(COLUMN_POTENTIALSTAKE, strPad(BitcoinUnits::formatAge(nDisplayUnit, nPotentialStake), 15, " ")); //use COIN for formatting
 			itemOutput->setText(COLUMN_POTENTIALSTAKE_int64_t, strPad(QString::number(nPotentialStake), 16, " "));
 	
