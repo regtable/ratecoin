@@ -501,7 +501,7 @@ generateRandomPrime(uint32_t primeBitLen, uint256 in_seed, uint256 *out_seed,
 {
 	// Verify that primeBitLen is not too small
 	if (primeBitLen < 2) {
-		throw ZerocoinException("Prime length is too short");
+		throw ZerocoinException(" PRIme length is too short");
 	}
 
 	// If primeBitLen < 33 bits, perform the base case.
@@ -537,8 +537,8 @@ generateRandomPrime(uint32_t primeBitLen, uint256 in_seed, uint256 *out_seed,
 			// Perform trial division on this (relatively small) integer to determine if "intc"
 			// is prime. If so, return success.
 			if (primalityTestByTrialDivision(intc)) {
-				// Return "intc" converted back into a Bignum and "prime_seed". We also updated
-				// the variable "prime_gen_counter" in previous statements.
+				// Return "intc" converted back into a Bignum and " PRIme_seed". We also updated
+				// the variable " PRIme_gen_counter" in previous statements.
 				result = intc;
 				*out_seed = prime_seed;
 

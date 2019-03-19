@@ -466,7 +466,7 @@ void SendCoinsDialog::coinControlClipboardBytes()
     QApplication::clipboard()->setText(ui->labelCoinControlBytes->text());
 }
 
-// Coin Control: copy label "Priority" to clipboard
+// Coin Control: copy label " PRIority" to clipboard
 void SendCoinsDialog::coinControlClipboardPriority()
 {
     QApplication::clipboard()->setText(ui->labelCoinControlPriority->text());

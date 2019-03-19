@@ -16,15 +16,17 @@ greaterThan(QT_MAJOR_VERSION, 4) {
 }
 
 win32 {
-    BOOST_LIB_SUFFIX=-mgw48-mt-s-1_55
-    BOOST_INCLUDE_PATH=C:/deps/boost_1_55_0
-    BOOST_LIB_PATH=C:/deps/boost_1_55_0/stage/lib
-    BDB_INCLUDE_PATH=C:/deps/db-4.8.30.NC/build_unix
-    BDB_LIB_PATH=C:/deps/db-4.8.30.NC/build_unix
-    OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.1g/include
-    OPENSSL_LIB_PATH=C:/deps/openssl-1.0.1g
+    BOOST_LIB_SUFFIX=-mgw49-mt-s-x32-1_68
+    BOOST_INCLUDE_PATH=C:/deps/boost_1_68_0
+    BOOST_LIB_PATH=C:/deps/boost_1_68_0/stage/lib
+    BDB_INCLUDE_PATH=C:/deps/db-6.2.32.NC/build_unix
+    BDB_LIB_PATH=C:/deps/db-6.2.32.NC/build_unix
+    OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.2p/include
+    OPENSSL_LIB_PATH=C:/deps/openssl-1.0.2p
     MINIUPNPC_INCLUDE_PATH=C:/deps/
     MINIUPNPC_LIB_PATH=C:/deps/miniupnpc
+    QRENCODE_INCLUDE_PATH=C:/deps/qrencode-4.0.2
+    QRENCODE_LIB_PATH=C:/deps/qrencode-4.0.2/.libs
 }
 
 
@@ -62,9 +64,10 @@ QMAKE_LFLAGS *= -fstack-protector-all --param ssp-buffer-size=1
 }
 # for extra security on Windows: enable ASLR and DEP via GCC linker flags
 
-win32:QMAKE_LFLAGS *= -Wl,--large-address-aware -static
+win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat
 win32:QMAKE_LFLAGS += -static-libgcc -static-libstdc++
-lessThan(QT_MAJOR_VERSION, 5): win32: QMAKE_LFLAGS *= -static
+win32:QMAKE_LFLAGS *= -Wl,--large-address-aware -static
+
 
 # use: qmake "USE_QRCODE=1"
 # libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
@@ -85,7 +88,7 @@ contains(USE_UPNP, -) {
     count(USE_UPNP, 0) {
         USE_UPNP=1
     }
-    DEFINES += USE_UPNP=$$USE_UPNP STATICLIB
+    DEFINES += USE_UPNP=$$USE_UPNP STATICLIB MINIUPNP_STATICLIB
     INCLUDEPATH += $$MINIUPNPC_INCLUDE_PATH
     LIBS += $$join(MINIUPNPC_LIB_PATH,,-L,) -lminiupnpc
     win32:LIBS += -liphlpapi
@@ -438,15 +441,15 @@ isEmpty(BOOST_THREAD_LIB_SUFFIX) {
 }
 
 isEmpty(BDB_LIB_PATH) {
-    macx:BDB_LIB_PATH = /opt/local/lib/db48
+    macx:BDB_LIB_PATH = /opt/local/lib/db62
 }
 
 isEmpty(BDB_LIB_SUFFIX) {
-    macx:BDB_LIB_SUFFIX = -4.8
+    macx:BDB_LIB_SUFFIX = -6.2
 }
 
 isEmpty(BDB_INCLUDE_PATH) {
-    macx:BDB_INCLUDE_PATH = /opt/local/include/db48
+    macx:BDB_INCLUDE_PATH = /opt/local/include/db62
 }
 
 isEmpty(BOOST_LIB_PATH) {

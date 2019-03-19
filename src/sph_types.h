@@ -1010,7 +1010,7 @@ typedef long long sph_s64;
 #endif
 
 /*
- * 64-bit x86, hereafter known as "amd64".
+ * 64-bit x86, hereafter known as "amd64 ".
  */
 #elif defined __x86_64 || defined _M_X64
 

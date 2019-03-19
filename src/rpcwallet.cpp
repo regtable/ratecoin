@@ -382,7 +382,7 @@ Value signmessage(const Array& params, bool fHelp)
 
     CKey key;
     if (!pwalletMain->GetKey(keyID, key))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
+        throw JSONRPCError(RPC_WALLET_ERROR, " PRIvate key not available");
 
     CDataStream ss(SER_GETHASH, 0);
     ss << strMessageMagic;
@@ -789,7 +789,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
     if ((int)keys.size() < nRequired)
         throw runtime_error(
             strprintf("not enough keys supplied "
-                      "(got %"PRIszu" keys, but need at least %d to redeem)", keys.size(), nRequired));
+                      "(got %" PRIszu " keys, but need at least %d to redeem)", keys.size(), nRequired));
     std::vector<CKey> pubkeys;
     pubkeys.resize(keys.size());
     for (unsigned int i = 0; i < keys.size(); i++)
@@ -1776,7 +1776,7 @@ Value makekeypair(const Array& params, bool fHelp)
 
     CPrivKey vchPrivKey = key.GetPrivKey();
     Object result;
-    result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
+    result.push_back(Pair(" PRIvateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
     result.push_back(Pair("PublicKey", HexStr(key.GetPubKey().Raw())));
     return result;
 }
@@ -1994,11 +1994,11 @@ Value multisend(const Array &params, bool fHelp)
 	{
 		string strCommand = params[0].get_str();
 		Object ret;
-		if(strCommand == "print")
+		if(strCommand == " PRInt")
 		{
 			return printMultiSend();
 		}
-		else if(strCommand == "printaddress" || strCommand == "printaddresses")
+		else if(strCommand == " PRIntaddress" || strCommand == " PRIntaddresses")
 		{
 			return printAddresses();
 		}
