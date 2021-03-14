@@ -184,7 +184,7 @@ namespace Checkpoints
         return false;
     }
 
-    // Automatically select a suitable sync-checkpoint 
+    // Automatically select a suitable sync-checkpoint
     uint256 AutoSelectSyncCheckpoint()
     {
         const CBlockIndex *pindex = pindexBest;
@@ -229,7 +229,7 @@ namespace Checkpoints
             return false;
         if (hashBlock == hashPendingCheckpoint)
             return true;
-        if (mapOrphanBlocks.count(hashPendingCheckpoint) 
+        if (mapOrphanBlocks.count(hashPendingCheckpoint)
             && hashBlock == WantedByOrphan(mapOrphanBlocks[hashPendingCheckpoint]))
             return true;
         return false;
@@ -347,7 +347,7 @@ namespace Checkpoints
 }
 
 // ppcoin: sync-checkpoint master key
-const std::string CSyncCheckpoint::strMasterPubKey = "02d5e843832a712d6cbb7701ff84e13faa91cd11ccd9fe7aa9397aff3ad11900b6";
+const std::string CSyncCheckpoint::strMasterPubKey = "0493ae6971eb5c870c0287fa99a69b10a2381422ec5e31a0d0398c4790ef55949111ab3223b6733575966561a0be316da6bbf11af4c965236eb74c13fb6962d773";
 
 std::string CSyncCheckpoint::strMasterPrivKey = "";
 
